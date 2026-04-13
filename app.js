@@ -402,7 +402,7 @@ function renderDefaultWorkspace(message = "Ordnerliste geladen") {
 
   workspace.innerHTML = `
     <div class="placeholder-card">
-      <h3>Bereit zum Lernen</h3>
+      <h3>Tap Cover ist bereit</h3>
       <p>${escapeHtml(message)}</p>
       <ol>
         <li>Lege nummerierte Ordner in <code>./images</code> an.</li>
@@ -495,6 +495,7 @@ function renderViewerWorkspace(folder) {
           <p class="viewer-note">Alle Zonen starten grau. Antippen oder anklicken schaltet zwischen grau und transparent um.</p>
         </div>
         <div class="toolbar-actions">
+          <button id="revealAllBtn" class="btn btn-secondary" type="button">Alle aufdecken</button>
           <button id="resetCoverBtn" class="btn btn-secondary" type="button">Alle wieder abdecken</button>
         </div>
       </div>
@@ -522,6 +523,11 @@ function renderViewerWorkspace(folder) {
       </div>
     </div>
   `;
+
+  document.getElementById("revealAllBtn").addEventListener("click", () => {
+    state.viewer.visibleMask = state.viewer.rects.map(() => false);
+    renderViewerOverlay();
+  });
 
   document.getElementById("resetCoverBtn").addEventListener("click", () => {
     state.viewer.visibleMask = state.viewer.rects.map(() => true);

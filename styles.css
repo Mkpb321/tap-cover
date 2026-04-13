@@ -9,7 +9,7 @@
   --primary-soft: #e8f0f7;
   --shadow: 0 10px 30px rgba(15, 35, 55, 0.08);
   --danger: #b42318;
-  --cover: rgba(102, 112, 133, 0.78);
+  --cover: #d7dee8;
   --backdrop: rgba(16, 24, 40, 0.42);
 }
 
@@ -289,7 +289,8 @@ code {
 
 .placeholder-card ol,
 .placeholder-card ul,
-.modal-copy ul {
+.modal-copy ul,
+.modal-copy ol {
   margin: 0.75rem 0 0;
   padding-left: 1.25rem;
 }
@@ -390,7 +391,7 @@ code {
 
 .cover-rect.covered {
   background: var(--cover);
-  border-color: rgba(57, 65, 81, 0.6);
+  border-color: rgba(122, 136, 156, 0.92);
 }
 
 .cover-rect.transparent {

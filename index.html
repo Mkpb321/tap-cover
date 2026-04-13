@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cover Trainer</title>
+  <title>Tap Cover</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -14,7 +14,7 @@
           <div class="brand-kicker">Lernwerkzeug</div>
           <button id="openInfoBtn" class="icon-btn" type="button" aria-label="Informationen anzeigen" title="Informationen anzeigen">i</button>
         </div>
-        <h1>Cover Trainer</h1>
+        <h1>Tap Cover</h1>
         <p>
           Die App erwartet den Ordner <code>./images</code> neben der <code>index.html</code>.
           Darin liegen nummerierte Unterordner <code>1</code>, <code>2</code>, <code>3</code>, …
@@ -84,23 +84,79 @@
       <div class="modal-header">
         <div>
           <div class="panel-kicker">Information</div>
-          <h3 id="infoModalTitle">Wie die App arbeitet</h3>
+          <h3 id="infoModalTitle">Wie Tap Cover funktioniert</h3>
         </div>
         <button id="closeInfoBtn" class="icon-btn icon-btn-secondary" type="button" aria-label="Dialog schließen">×</button>
       </div>
 
       <div class="modal-body">
         <div class="info-box">
-          <span class="label">Funktionsweise</span>
+          <span class="label">Zweck der App</span>
           <div class="modal-copy">
-            <p>Die App liest nicht frei alle Unterordner aus, sondern prüft feste Pfade:</p>
+            <p><strong>Tap Cover</strong> ist für Lernbilder gedacht, bei denen bestimmte Bereiche zunächst abgedeckt und beim Lernen einzeln wieder aufgedeckt werden sollen.</p>
+            <p>Typischer Einsatz: Du legst ein beschriftetes Bild ab, deckst Begriffe oder markierte Bereiche mit Rechtecken ab und tippst sie beim Abfragen nach und nach frei.</p>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <span class="label">Ordnerstruktur</span>
+          <div class="modal-copy">
+            <p>Die App erwartet neben der <code>index.html</code> einen Ordner <code>images</code>.</p>
+            <p>Darin liegen nummerierte Unterordner:</p>
             <p><code>./images/1/</code>, <code>./images/2/</code>, <code>./images/3/</code>, …</p>
-            <p>Pro Ordner werden diese festen Dateien erwartet:</p>
+            <p>In jedem Unterordner gelten feste Dateinamen:</p>
             <ul>
               <li><code>image.png</code> als Bilddatei</li>
-              <li><code>cover.json</code> optional für vorhandene Cover-Zonen</li>
+              <li><code>cover.json</code> optional für bereits definierte Cover-Zonen</li>
             </ul>
-            <p>Die Suche stoppt erst, wenn <strong>100 Ordnernummern in Folge fehlen</strong>. Dadurch sind Lücken erlaubt, zum Beispiel <code>1</code>, <code>2</code>, <code>7</code>, <code>18</code>.</p>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <span class="label">Workflow</span>
+          <div class="modal-copy">
+            <ol>
+              <li>Lege ein Lernbild als <code>image.png</code> in einen nummerierten Unterordner.</li>
+              <li>Starte <code>index.html</code> über VS Code mit <strong>Open with Live Server</strong>.</li>
+              <li>Die App prüft automatisch die Ordner <code>1</code>, <code>2</code>, <code>3</code>, …</li>
+              <li>Klicke links auf einen Eintrag.</li>
+              <li>Gibt es nur <code>image.png</code>, öffnet sich der Editor zum Zeichnen der Cover-Rechtecke.</li>
+              <li>Nach dem Zeichnen lädst du eine neue <code>cover.json</code> herunter und legst sie manuell in denselben Ordner.</li>
+              <li>Beim nächsten Öffnen des Ordners startet direkt die Lernansicht mit den gespeicherten Rechtecken.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <span class="label">Verhalten pro Ordner</span>
+          <div class="modal-copy">
+            <ul>
+              <li><strong>Ordner ohne <code>image.png</code>:</strong> Es erscheint eine Fehlermeldung per Alert.</li>
+              <li><strong><code>image.png</code> ohne <code>cover.json</code>:</strong> Der Editor zum Erstellen der Cover-Zonen wird geöffnet.</li>
+              <li><strong><code>image.png</code> mit gültiger <code>cover.json</code>:</strong> Die Lernansicht wird geöffnet.</li>
+              <li><strong>Ungültige <code>cover.json</code>:</strong> Es erscheint ein Hinweis, danach wird der Editor geöffnet.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <span class="label">Lernansicht</span>
+          <div class="modal-copy">
+            <p>In der Lernansicht starten alle Cover-Zonen zunächst sichtbar und vollständig abgedeckt.</p>
+            <p>Durch Antippen oder Anklicken eines Rechtecks schaltest du genau diese Zone zwischen <strong>abgedeckt</strong> und <strong>aufgedeckt</strong> um.</p>
+            <p>Zusätzlich gibt es Sammelaktionen:</p>
+            <ul>
+              <li><strong>Alle wieder abdecken</strong> setzt alle Rechtecke zurück.</li>
+              <li><strong>Alle aufdecken</strong> macht alle Rechtecke transparent.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <span class="label">Warum die App so arbeitet</span>
+          <div class="modal-copy">
+            <p>Ein normales Browser-Frontend darf lokale Ordner nicht frei durchsuchen. Deshalb arbeitet Tap Cover mit einer festen, vorhersagbaren Struktur statt mit beliebigen Dateinamen oder frei gelesenen Verzeichnisbäumen.</p>
+            <p>Die App prüft bekannte Pfade und stoppt erst, wenn <strong>100 Ordnernummern in Folge fehlen</strong>. Dadurch sind Lücken erlaubt, zum Beispiel <code>1</code>, <code>2</code>, <code>7</code>, <code>18</code>.</p>
           </div>
         </div>
 
@@ -108,11 +164,12 @@
           <span class="label">Fehlerquellen</span>
           <div class="modal-copy">
             <ul>
-              <li>Der Dateiname muss exakt <code>image.png</code> heißen. <code>Image.png</code>, <code>image.PNG</code> oder <code>bild.png</code> werden nicht erkannt.</li>
+              <li>Der Dateiname muss exakt <code>image.png</code> heißen. Abweichungen wie <code>Image.png</code>, <code>image.PNG</code> oder <code>bild.png</code> werden nicht erkannt.</li>
               <li>Die Ordnernamen müssen rein numerisch sein: <code>1</code>, <code>2</code>, <code>3</code>, …</li>
               <li>Wenn mehr als 100 Nummern am Stück fehlen, endet der Scan vorher. Höhere Ordner werden dann nicht mehr angezeigt.</li>
-              <li>Die App muss über einen lokalen Webserver laufen, zum Beispiel VS Code Live Server. Per Doppelklick auf <code>index.html</code> funktioniert es nicht zuverlässig.</li>
-              <li>Ein fehlerhaftes <code>cover.json</code> öffnet den Editor statt des Viewers.</li>
+              <li>Die App muss über einen lokalen Webserver laufen, zum Beispiel VS Code Live Server. Ein Doppelklick auf <code>index.html</code> reicht nicht.</li>
+              <li>Eine fehlerhafte <code>cover.json</code> führt nicht zum Viewer, sondern zum Editor.</li>
+              <li>Nach dem Herunterladen der <code>cover.json</code> muss diese manuell in den passenden Bildordner verschoben werden.</li>
               <li>Browser- oder Server-Caching kann alte Daten zeigen; dafür gibt es den Button <strong>Liste aktualisieren</strong>.</li>
               <li>Auf manchen Systemen ist die Schreibweise von Dateinamen case-sensitive.</li>
             </ul>

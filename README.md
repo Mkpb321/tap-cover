@@ -1,4 +1,4 @@
-# Cover Trainer
+# Tap Cover
 
 ## Inhalt
 - `index.html`
@@ -7,7 +7,7 @@
 - `images/`
 
 ## Erwartete Ordnerstruktur
-Die App arbeitet mit einer festen Struktur unter `images/`:
+Tap Cover arbeitet mit einer festen Struktur unter `images/`:
 
 ```text
 images/
@@ -26,7 +26,7 @@ images/
 - Bilddatei heißt exakt `image.png`
 - Andere Bildtypen werden nicht berücksichtigt
 - `cover.json` ist optional
-- Die App scannt aufsteigend und stoppt nach **100 fehlenden Ordnern in Folge**
+- Tap Cover scannt aufsteigend und stoppt nach **100 fehlenden Ordnern in Folge**
 
 ## Verwendung mit VS Code Live Server
 1. Lege die App-Dateien in einen Ordner.
@@ -47,3 +47,9 @@ Es gibt ohne eigenes Backend keine freie Ordnerauflistung im Browser. Deshalb nu
 - Wenn mehr als 100 Nummern hintereinander fehlen, endet der Scan.
 - Dateinamen müssen exakt stimmen.
 - Ein Doppelklick auf `index.html` ohne Webserver ist nicht ausreichend.
+
+
+## Neu in diesem Stand
+- Voll deckendes, helleres Grau für abgedeckte Bereiche
+- Zusätzlicher Button **Alle aufdecken** in der Lernansicht
+- Überarbeiteter Info-Dialog mit Zweck, Gesamt-Workflow und typischen Fehlerquellen
