@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "image": {
+    "fileName": "image.png",
+    "width": 947,
+    "height": 863
+  },
+  "rectangles": [
+    {
+      "id": "rect-1",
+      "x": 197,
+      "y": 83,
+      "width": 84,
+      "height": 44
+    },
+    {
+      "id": "rect-2",
+      "x": 295,
+      "y": 89,
+      "width": 65,
+      "height": 50
+    },
+    {
+      "id": "rect-3",
+      "x": 376,
+      "y": 94,
+      "width": 97,
+      "height": 43
+    },
+    {
+      "id": "rect-4",
+      "x": 496,
+      "y": 93,
+      "width": 109,
+      "height": 69
+    },
+    {
+      "id": "rect-5",
+      "x": 619,
+      "y": 106,
+      "width": 81,
+      "height": 42
+    },
+    {
+      "id": "rect-6",
+      "x": 729,
+      "y": 87,
+      "width": 116,
+      "height": 65
+    }
+  ]
+}
