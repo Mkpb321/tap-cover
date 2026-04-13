@@ -57,3 +57,7 @@ Die App muss über einen Webserver laufen, z. B.:
 - GitHub Pages
 
 Ein Doppelklick auf `index.html` reicht nicht.
+
+
+## Favicon
+Lege die Favicon-Dateien in `./favicon/` ab. Erwartete Dateien: `apple-touch-icon.png`, `favicon-32x32.png`, `favicon-16x16.png`, `favicon.ico`, `android-chrome-192x192.png`, `android-chrome-512x512.png`, `site.webmanifest`.

@@ -1,0 +1,165 @@
+{
+  "version": 1,
+  "title": "L8 13-16",
+  "image": {
+    "fileName": "image.png",
+    "width": 974,
+    "height": 639
+  },
+  "rectangles": [
+    {
+      "id": "rect-1",
+      "x": 294,
+      "y": 79,
+      "width": 94,
+      "height": 83
+    },
+    {
+      "id": "rect-2",
+      "x": 393,
+      "y": 73,
+      "width": 105,
+      "height": 68
+    },
+    {
+      "id": "rect-3",
+      "x": 503,
+      "y": 74,
+      "width": 111,
+      "height": 60
+    },
+    {
+      "id": "rect-4",
+      "x": 627,
+      "y": 66,
+      "width": 58,
+      "height": 100
+    },
+    {
+      "id": "rect-5",
+      "x": 700,
+      "y": 77,
+      "width": 68,
+      "height": 51
+    },
+    {
+      "id": "rect-6",
+      "x": 790,
+      "y": 71,
+      "width": 128,
+      "height": 53
+    },
+    {
+      "id": "rect-7",
+      "x": 393,
+      "y": 239,
+      "width": 106,
+      "height": 42
+    },
+    {
+      "id": "rect-8",
+      "x": 512,
+      "y": 238,
+      "width": 115,
+      "height": 84
+    },
+    {
+      "id": "rect-9",
+      "x": 634,
+      "y": 241,
+      "width": 97,
+      "height": 52
+    },
+    {
+      "id": "rect-10",
+      "x": 747,
+      "y": 241,
+      "width": 62,
+      "height": 50
+    },
+    {
+      "id": "rect-11",
+      "x": 836,
+      "y": 240,
+      "width": 67,
+      "height": 100
+    },
+    {
+      "id": "rect-12",
+      "x": 590,
+      "y": 398,
+      "width": 44,
+      "height": 36
+    },
+    {
+      "id": "rect-13",
+      "x": 670,
+      "y": 402,
+      "width": 128,
+      "height": 49
+    },
+    {
+      "id": "rect-14",
+      "x": 798,
+      "y": 403,
+      "width": 120,
+      "height": 95
+    },
+    {
+      "id": "rect-15",
+      "x": 27,
+      "y": 560,
+      "width": 148,
+      "height": 43
+    },
+    {
+      "id": "rect-16",
+      "x": 177,
+      "y": 563,
+      "width": 102,
+      "height": 58
+    },
+    {
+      "id": "rect-17",
+      "x": 292,
+      "y": 561,
+      "width": 76,
+      "height": 59
+    },
+    {
+      "id": "rect-18",
+      "x": 377,
+      "y": 559,
+      "width": 107,
+      "height": 56
+    },
+    {
+      "id": "rect-19",
+      "x": 497,
+      "y": 567,
+      "width": 72,
+      "height": 56
+    },
+    {
+      "id": "rect-20",
+      "x": 579,
+      "y": 566,
+      "width": 109,
+      "height": 65
+    },
+    {
+      "id": "rect-21",
+      "x": 697,
+      "y": 569,
+      "width": 95,
+      "height": 66
+    },
+    {
+      "id": "rect-22",
+      "x": 796,
+      "y": 574,
+      "width": 104,
+      "height": 65
+    }
+  ]
+}
