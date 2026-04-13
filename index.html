@@ -28,7 +28,6 @@
       <main class="workspace-panel">
         <div class="workspace-head">
           <h2 id="viewTitle">Bereit</h2>
-          <span id="contextBadge" class="context-badge">./images</span>
         </div>
         <section id="workspace" class="workspace"></section>
       </main>
@@ -49,8 +48,8 @@
             <p>Die App erwartet neben <code>index.html</code> einen Ordner <code>images</code> mit nummerierten Unterordnern <code>1</code>, <code>2</code>, <code>3</code> …</p>
             <p>In jedem Unterordner gelten feste Dateinamen:</p>
             <ul>
-              <li><code>image.png</code> zwingend für das Bild</li>
-              <li><code>cover.json</code> optional für fertige Cover-Zonen</li>
+              <li><code>image.png</code> für das Bild</li>
+              <li><code>cover.json</code> optional für die Rechtecke</li>
             </ul>
           </div>
         </div>
@@ -61,20 +60,28 @@
             <ol>
               <li>Bild als <code>image.png</code> in einen nummerierten Ordner legen.</li>
               <li>Eintrag in der Liste antippen.</li>
-              <li>Mit <code>cover.json</code> öffnet die Lernansicht, ohne <code>cover.json</code> der Editor.</li>
-              <li>Im Editor Rechtecke zeichnen und <code>cover.json</code> herunterladen.</li>
-              <li>Die heruntergeladene <code>cover.json</code> manuell in denselben Bildordner legen.</li>
-              <li>In der Lernansicht Rechtecke antippen, um sie auf- oder zuzudecken.</li>
+              <li>Ohne <code>cover.json</code> öffnet der Editor.</li>
+              <li>Im Editor optional einen Titel vergeben, Rechtecke zeichnen und <code>cover.json</code> herunterladen.</li>
+              <li>Die heruntergeladene <code>cover.json</code> in denselben Bildordner legen.</li>
+              <li>Mit gültiger <code>cover.json</code> öffnet die Lernansicht.</li>
+              <li>In der Lernansicht Rechtecke antippen oder alle auf / alle zu verwenden.</li>
             </ol>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <span class="label">Titel</span>
+          <div class="modal-copy">
+            <p>Im Editor kann ein optionaler Titel erfasst werden. Dieser wird in <code>cover.json</code> als <code>title</code> gespeichert.</p>
+            <p>Wenn ein Titel in <code>cover.json</code> vorhanden ist, erscheint er in der Ordnerliste unter der Nummer.</p>
           </div>
         </div>
 
         <div class="info-box">
           <span class="label">Scan-Regel</span>
           <div class="modal-copy">
-            <p>Tap Cover prüft direkt bekannte Dateien wie <code>./images/7/image.png</code> und <code>./images/7/cover.json</code>. Es werden keine Ordner-URLs wie <code>./images/7/</code> abgefragt.</p>
+            <p>Tap Cover prüft nur direkte Datei-URLs wie <code>./images/7/image.png</code> und <code>./images/7/cover.json</code>. Ordner-URLs wie <code>./images/7/</code> werden nicht abgefragt.</p>
             <p>Der Scan läuft numerisch hoch und stoppt, sobald die Lücke größer als <strong>2</strong> wird, also nach <strong>3 fehlenden Nummern in Folge</strong>.</p>
-            <p>Beispiel: <code>1</code>, <code>2</code>, <code>5</code> funktioniert noch. Fehlen aber etwa <code>8</code>, <code>9</code> und <code>10</code> hintereinander, endet der Scan vor <code>11</code>.</p>
           </div>
         </div>
 
@@ -84,22 +91,21 @@
             <p>Die App speichert lokal im Browser:</p>
             <ul>
               <li>wann ein Eintrag zuletzt geöffnet wurde</li>
-              <li>welche Cover-Zonen beim letzten Öffnen sichtbar oder verborgen waren</li>
+              <li>welche Cover-Zonen beim letzten Öffnen sichtbar oder verdeckt waren</li>
             </ul>
-            <p>Beim nächsten Öffnen eines Eintrags wird dieser Zustand wiederhergestellt, solange die Anzahl der Rechtecke gleich geblieben ist.</p>
           </div>
         </div>
 
         <div class="info-box">
-          <span class="label">Typische Fehlerquellen</span>
+          <span class="label">Fehlerquellen</span>
           <div class="modal-copy">
             <ul>
               <li>Dateiname muss exakt <code>image.png</code> heißen.</li>
               <li>Ordnernamen müssen rein numerisch sein.</li>
               <li>Die App muss über einen Webserver laufen, z. B. Live Server oder GitHub Pages.</li>
-              <li>Eine ungültige <code>cover.json</code> öffnet den Editor statt des Viewers.</li>
-              <li>Wenn zwischen zwei vorhandenen Nummern mehr als zwei fehlende Nummern liegen, werden spätere Einträge nicht mehr gefunden.</li>
-              <li>Ändert sich die Rechteckanzahl in <code>cover.json</code>, wird der gespeicherte Sichtbarkeitszustand verworfen und alles wieder abgedeckt gestartet.</li>
+              <li>Eine ungültige <code>cover.json</code> öffnet den Editor.</li>
+              <li>Wenn mehr als zwei Nummern in Folge fehlen, werden spätere Einträge nicht mehr gefunden.</li>
+              <li>Ändert sich die Rechteckanzahl in <code>cover.json</code>, startet die Lernansicht wieder vollständig abgedeckt.</li>
             </ul>
           </div>
         </div>
@@ -111,9 +117,9 @@
     <button class="folder-item" type="button">
       <span class="folder-item-top">
         <span class="folder-item-name"></span>
-        <span class="folder-item-meta"></span>
+        <span class="folder-item-last"></span>
       </span>
-      <span class="folder-item-last"></span>
+      <span class="folder-item-title"></span>
     </button>
   </template>
 

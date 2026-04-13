@@ -18,6 +18,25 @@ images/
 - Die App prüft direkte Datei-URLs unter `./images/<nummer>/...`
 - Der Scan stoppt, sobald **3 Nummern in Folge fehlen**. Das entspricht einer erlaubten Lücke von höchstens **2**.
 
+## Titel
+Im Editor kann ein optionaler Titel gesetzt werden.
+
+Beispiel:
+```json
+{
+  "version": 1,
+  "title": "Nervensystem – Übersicht",
+  "image": {
+    "fileName": "image.png",
+    "width": 1200,
+    "height": 800
+  },
+  "rectangles": []
+}
+```
+
+Wenn `title` in `cover.json` vorhanden ist, wird er in der Ordnerliste angezeigt.
+
 ## Verhalten
 - `image.png` ohne `cover.json` → Editor
 - `image.png` mit gültiger `cover.json` → Lernansicht

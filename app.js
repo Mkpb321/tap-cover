@@ -2,13 +2,12 @@ const IMAGE_FILE_NAME = "image.png";
 const COVER_FILE_NAME = "cover.json";
 const GAP_LIMIT = 2;
 const MISSING_STREAK_LIMIT = GAP_LIMIT + 1;
-const STORAGE_KEY = "tap-cover:v8";
+const STORAGE_KEY = "tap-cover:v9";
 
 const folderList = document.getElementById("folderList");
 const folderCount = document.getElementById("folderCount");
 const refreshFoldersBtn = document.getElementById("refreshFoldersBtn");
 const viewTitle = document.getElementById("viewTitle");
-const contextBadge = document.getElementById("contextBadge");
 const workspace = document.getElementById("workspace");
 const openInfoBtn = document.getElementById("openInfoBtn");
 const closeInfoBtn = document.getElementById("closeInfoBtn");
@@ -29,6 +28,7 @@ const state = {
     rects: [],
     previewRect: null,
     pointer: null,
+    coverTitle: "",
   },
   viewer: {
     imageUrl: null,
@@ -36,6 +36,7 @@ const state = {
     imageNatural: null,
     rects: [],
     visibleMask: [],
+    coverTitle: "",
   },
 };
 
@@ -72,7 +73,7 @@ function saveStorage() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state.storage));
   } catch {
-    // Ignore storage issues gracefully.
+    // Ignore storage issues.
   }
 }
 
@@ -127,11 +128,7 @@ async function loadFolders() {
       if (stillExists) {
         await openFolder(stillExists.name, { silentAlert: true, updateLastOpened: false });
       } else {
-        state.activeFolderName = null;
-        state.activeFolder = null;
-        state.activeMode = null;
-        resetEditorState();
-        resetViewerState();
+        clearActiveState();
         renderDefaultWorkspace("Aktiver Eintrag nicht mehr gefunden");
       }
     }
@@ -145,6 +142,14 @@ async function loadFolders() {
   } finally {
     refreshFoldersBtn.disabled = false;
   }
+}
+
+function clearActiveState() {
+  state.activeFolderName = null;
+  state.activeFolder = null;
+  state.activeMode = null;
+  resetEditorState();
+  resetViewerState();
 }
 
 function setFolderListLoading() {
@@ -192,13 +197,18 @@ async function buildNumberedFolderSummary(folderNumber) {
       imageUrl: null,
       imageFileName: null,
       coverUrl: null,
+      title: "",
     };
   }
 
   let coverState = "missing";
+  let title = "";
+
   if (hasCover) {
     try {
-      await fetchJsonFile(coverUrl);
+      const raw = await fetchJsonFile(coverUrl);
+      title = normalizeCoverTitle(raw?.title);
+      validateCoverJson(raw);
       coverState = "valid";
     } catch {
       coverState = "invalid";
@@ -215,6 +225,7 @@ async function buildNumberedFolderSummary(folderNumber) {
     imageUrl: hasImage ? imageUrl : null,
     imageFileName: hasImage ? IMAGE_FILE_NAME : null,
     coverUrl: hasCover ? coverUrl : null,
+    title,
   };
 }
 
@@ -261,11 +272,11 @@ function renderFolderList() {
     const fragment = folderItemTemplate.content.cloneNode(true);
     const button = fragment.querySelector(".folder-item");
     const nameEl = fragment.querySelector(".folder-item-name");
-    const metaEl = fragment.querySelector(".folder-item-meta");
+    const titleEl = fragment.querySelector(".folder-item-title");
     const lastEl = fragment.querySelector(".folder-item-last");
 
     nameEl.textContent = folder.name;
-    metaEl.textContent = buildFolderMeta(folder);
+    titleEl.textContent = folder.title || buildFolderFallback(folder);
     lastEl.textContent = buildLastOpenedText(folder.name);
 
     if (state.activeFolderName === folder.name) {
@@ -277,15 +288,15 @@ function renderFolderList() {
   }
 }
 
-function buildFolderMeta(folder) {
+function buildFolderFallback(folder) {
   if (!folder.hasImage) {
-    return "ohne image";
+    return "ohne image.png";
   }
   if (folder.coverState === "invalid") {
-    return "cover fehlerhaft";
+    return "cover.json fehlerhaft";
   }
   if (!folder.hasCover) {
-    return "ohne cover";
+    return "ohne cover.json";
   }
   return "bereit";
 }
@@ -293,21 +304,21 @@ function buildFolderMeta(folder) {
 function buildLastOpenedText(folderName) {
   const { lastOpenedAt } = getFolderMemory(folderName);
   if (!lastOpenedAt) {
-    return "Noch nie geöffnet";
+    return "nie";
   }
 
   const date = new Date(lastOpenedAt);
   if (Number.isNaN(date.getTime())) {
-    return "Noch nie geöffnet";
+    return "nie";
   }
 
-  return `Zuletzt ${new Intl.DateTimeFormat("de-DE", {
+  return new Intl.DateTimeFormat("de-DE", {
     day: "2-digit",
     month: "2-digit",
     year: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(date)}`;
+  }).format(date);
 }
 
 async function openFolder(folderName, { silentAlert = false, updateLastOpened = true } = {}) {
@@ -377,6 +388,7 @@ async function openEditor(folder) {
   state.editor.rects = [];
   state.editor.previewRect = null;
   state.editor.pointer = null;
+  state.editor.coverTitle = folder.title || "";
 
   renderEditorWorkspace(folder);
 }
@@ -392,13 +404,35 @@ async function openViewer(folder, rawCoverJson) {
   state.viewer.imageNatural = imageNatural;
   state.viewer.imageFileName = folder.imageFileName;
   state.viewer.rects = normalized.rectangles;
+  state.viewer.coverTitle = normalized.title;
   state.viewer.visibleMask = getSavedVisibleMask(folder.name, normalized.rectangles.length)
     || normalized.rectangles.map(() => true);
 
+  folder.title = normalized.title;
+  renderFolderList();
   renderViewerWorkspace(folder);
 }
 
+function validateCoverJson(raw) {
+  if (!Array.isArray(raw?.rectangles)) {
+    throw new Error("cover.json enthält kein gültiges Array 'rectangles'.");
+  }
+
+  raw.rectangles.forEach((rect, index) => {
+    const x = numberOrNull(rect?.x);
+    const y = numberOrNull(rect?.y);
+    const rectWidth = numberOrNull(rect?.width);
+    const rectHeight = numberOrNull(rect?.height);
+
+    if ([x, y, rectWidth, rectHeight].some((value) => value === null)) {
+      throw new Error(`Rechteck ${index + 1} in cover.json ist unvollständig.`);
+    }
+  });
+}
+
 function normalizeCoverJson(raw, fallbackImageNatural) {
+  validateCoverJson(raw);
+
   const width = numberOrNull(raw?.image?.width)
     ?? numberOrNull(raw?.imageWidth)
     ?? numberOrNull(raw?.width)
@@ -409,55 +443,45 @@ function normalizeCoverJson(raw, fallbackImageNatural) {
     ?? numberOrNull(raw?.height)
     ?? fallbackImageNatural.height;
 
-  if (!Array.isArray(raw?.rectangles)) {
-    throw new Error("cover.json enthält kein gültiges Array 'rectangles'.");
-  }
-
-  const rectangles = raw.rectangles.map((rect, index) => {
-    const x = numberOrNull(rect?.x);
-    const y = numberOrNull(rect?.y);
-    const rectWidth = numberOrNull(rect?.width);
-    const rectHeight = numberOrNull(rect?.height);
-
-    if ([x, y, rectWidth, rectHeight].some((value) => value === null)) {
-      throw new Error(`Rechteck ${index + 1} in cover.json ist unvollständig.`);
-    }
-
-    return {
-      id: rect?.id || `rect-${index + 1}`,
-      x: clamp(Math.round(x), 0, width),
-      y: clamp(Math.round(y), 0, height),
-      width: clampNonNegative(Math.round(rectWidth)),
-      height: clampNonNegative(Math.round(rectHeight)),
-    };
-  }).filter((rect) => rect.width > 0 && rect.height > 0);
+  const rectangles = raw.rectangles.map((rect, index) => ({
+    id: rect?.id || `rect-${index + 1}`,
+    x: clamp(Math.round(Number(rect.x)), 0, width),
+    y: clamp(Math.round(Number(rect.y)), 0, height),
+    width: clampNonNegative(Math.round(Number(rect.width))),
+    height: clampNonNegative(Math.round(Number(rect.height))),
+  })).filter((rect) => rect.width > 0 && rect.height > 0);
 
   return {
+    title: normalizeCoverTitle(raw?.title),
     image: { width, height },
     rectangles,
   };
 }
 
+function normalizeCoverTitle(value) {
+  if (typeof value !== "string") {
+    return "";
+  }
+  return value.trim().slice(0, 120);
+}
+
 function renderDefaultWorkspace(message = "Bereit") {
   viewTitle.textContent = "Bereit";
-  contextBadge.textContent = "./images";
   workspace.innerHTML = `<div class="placeholder-card">${escapeHtml(message)}</div>`;
 }
 
 function renderDirectoryError(error) {
   viewTitle.textContent = "Fehler";
-  contextBadge.textContent = "Laden";
   workspace.innerHTML = `<div class="error-card">${escapeHtml(error?.message || "Unbekannter Fehler")}</div>`;
 }
 
 function renderEditorWorkspace(folder) {
-  viewTitle.textContent = folder.name;
-  contextBadge.textContent = "Editor";
+  viewTitle.textContent = buildWorkspaceTitle(folder, state.editor.coverTitle);
 
   workspace.innerHTML = `
     <div class="workspace-card">
       <div class="toolbar">
-        <div class="toolbar-title">Ordner ${escapeHtml(folder.name)}</div>
+        <input id="coverTitleInput" class="title-input" type="text" maxlength="120" placeholder="Titel optional" value="${escapeHtml(state.editor.coverTitle)}" />
         <div class="toolbar-actions">
           <button id="undoRectBtn" class="btn" type="button">Zurück</button>
           <button id="clearRectsBtn" class="btn btn-danger" type="button">Leeren</button>
@@ -481,6 +505,10 @@ function renderEditorWorkspace(folder) {
   overlay.addEventListener("pointerleave", finishDrawingRect);
   overlay.addEventListener("pointercancel", cancelDrawingRect);
 
+  document.getElementById("coverTitleInput").addEventListener("input", (event) => {
+    state.editor.coverTitle = normalizeCoverTitle(event.target.value);
+    viewTitle.textContent = buildWorkspaceTitle(folder, state.editor.coverTitle);
+  });
   document.getElementById("undoRectBtn").addEventListener("click", undoLastRect);
   document.getElementById("clearRectsBtn").addEventListener("click", clearRects);
   document.getElementById("downloadCoverBtn").addEventListener("click", downloadCoverJson);
@@ -489,14 +517,12 @@ function renderEditorWorkspace(folder) {
 }
 
 function renderViewerWorkspace(folder) {
-  viewTitle.textContent = folder.name;
-  contextBadge.textContent = "Lernen";
+  viewTitle.textContent = buildWorkspaceTitle(folder, state.viewer.coverTitle);
 
   workspace.innerHTML = `
     <div class="workspace-card">
-      <div class="toolbar">
-        <div class="toolbar-title">Ordner ${escapeHtml(folder.name)}</div>
-        <div class="toolbar-actions">
+      <div class="toolbar toolbar-tight">
+        <div class="toolbar-actions toolbar-actions-full">
           <button id="revealAllBtn" class="btn" type="button">Alle auf</button>
           <button id="resetCoverBtn" class="btn" type="button">Alle zu</button>
         </div>
@@ -524,6 +550,10 @@ function renderViewerWorkspace(folder) {
   });
 
   renderViewerOverlay();
+}
+
+function buildWorkspaceTitle(folder, title) {
+  return title ? `${folder.name} · ${title}` : folder.name;
 }
 
 function renderEditorOverlay() {
@@ -717,8 +747,10 @@ function downloadCoverJson() {
     return;
   }
 
+  const title = normalizeCoverTitle(state.editor.coverTitle);
   const payload = {
     version: 1,
+    title,
     image: {
       fileName: state.editor.imageFileName,
       width: state.editor.imageNatural.width,
@@ -751,6 +783,7 @@ function resetEditorState() {
   state.editor.imageUrl = null;
   state.editor.imageFileName = null;
   state.editor.pointer = null;
+  state.editor.coverTitle = "";
 }
 
 function resetViewerState() {
@@ -759,6 +792,7 @@ function resetViewerState() {
   state.viewer.imageNatural = null;
   state.viewer.imageUrl = null;
   state.viewer.imageFileName = null;
+  state.viewer.coverTitle = "";
 }
 
 function getImageDimensions(src) {
