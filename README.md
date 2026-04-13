@@ -58,3 +58,9 @@ Es gibt ohne eigenes Backend keine freie Ordnerauflistung im Browser. Deshalb nu
 
 ## GitHub Pages Hinweis
 Da Tap Cover nur noch direkte Datei-URLs prüft und keine Ordner-URLs mehr benötigt, funktioniert derselbe Code auch auf GitHub Pages, solange `images/` im veröffentlichten Projektpfad liegt.
+
+
+## GitHub Pages
+
+Diese Version prüft nur direkte Datei-URLs wie `./images/7/image.png` und `./images/7/cover.json`.
+Es werden **keine Ordner-URLs** wie `./images/7/` abgefragt. Das ist wichtig, weil GitHub Pages statische Dateien zuverlässig ausliefert, das Prüfen von Ordnerpfaden aber nicht für diese App taugt.

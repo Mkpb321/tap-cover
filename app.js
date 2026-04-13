@@ -179,36 +179,29 @@ async function buildNumberedFolderSummary(folderNumber) {
 
 async function resourceExists(url) {
   try {
-    const headResponse = await fetch(url, {
-      method: "HEAD",
-      cache: "no-store",
-    });
-
-    if (headResponse.ok) {
-      return true;
-    }
-
-    if (headResponse.status === 404) {
-      return false;
-    }
-
-    if (headResponse.status !== 405 && headResponse.status !== 501) {
-      return false;
-    }
-  } catch {
-    // Fallback below.
-  }
-
-  try {
-    const getResponse = await fetch(url, {
+    const response = await fetch(withProbeCacheBust(url), {
       method: "GET",
       cache: "no-store",
     });
 
-    return getResponse.ok;
+    if (response.body) {
+      try {
+        await response.body.cancel();
+      } catch {
+        // Ignore cancellation issues. We only need the status code.
+      }
+    }
+
+    return response.ok;
   } catch {
     return false;
   }
+}
+
+function withProbeCacheBust(url) {
+  const cacheBustedUrl = new URL(url, document.baseURI);
+  cacheBustedUrl.searchParams.set("_tapcover_probe", String(Date.now()));
+  return cacheBustedUrl.href;
 }
 
 function renderFolderList() {
