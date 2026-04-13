@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cover Trainer</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-block">
+        <div class="brand-kicker">Lernwerkzeug</div>
+        <h1>Cover Trainer</h1>
+        <p>
+          Wähle deinen <code>images</code>-Ordner aus. Die Liste zeigt die Unterordner,
+          aus denen du Bilder mit Cover-Zonen laden oder neue Cover-Dateien erzeugen kannst.
+        </p>
+      </div>
+
+      <div class="sidebar-actions">
+        <input id="folderInput" type="file" webkitdirectory directory multiple hidden />
+        <button id="selectFolderBtn" class="btn btn-primary" type="button">
+          images-Ordner auswählen
+        </button>
+      </div>
+
+      <div class="list-header">
+        <span>Unterordner</span>
+        <span id="folderCount" class="count-pill">0</span>
+      </div>
+
+      <div id="folderList" class="folder-list empty-state-list">
+        Noch kein Ordner ausgewählt.
+      </div>
+    </aside>
+
+    <main class="main-panel">
+      <header class="panel-header">
+        <div>
+          <div class="panel-kicker">Ansicht</div>
+          <h2 id="viewTitle">Bereit</h2>
+        </div>
+        <div id="contextBadge" class="context-badge">Kein Ordner geladen</div>
+      </header>
+
+      <section id="workspace" class="workspace">
+        <div class="placeholder-card">
+          <h3>So verwendest du die App</h3>
+          <ol>
+            <li>Lege die App-Dateien an einen beliebigen Ort.</li>
+            <li>Lege daneben deinen Ordner <code>images</code> mit Unterordnern an.</li>
+            <li>Klicke auf <strong>images-Ordner auswählen</strong> und wähle genau diesen Ordner.</li>
+            <li>Klicke einen Unterordner an.</li>
+          </ol>
+          <p>
+            Verhalten pro Unterordner:
+          </p>
+          <ul>
+            <li><strong>Kein Bild:</strong> Alert mit Fehlermeldung</li>
+            <li><strong>Bild, aber keine cover.json:</strong> Editor zum Erstellen neuer Cover-Zonen</li>
+            <li><strong>Bild und cover.json:</strong> Viewer mit grauen Zonen zum Aufdecken/Abdecken</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <template id="folderItemTemplate">
+    <button class="folder-item" type="button">
+      <span class="folder-item-name"></span>
+      <span class="folder-item-meta"></span>
+    </button>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
