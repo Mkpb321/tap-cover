@@ -10,28 +10,41 @@
   <div class="app-shell">
     <aside class="sidebar">
       <div class="brand-block">
-        <div class="brand-kicker">Lernwerkzeug</div>
+        <div class="brand-topline">
+          <div class="brand-kicker">Lernwerkzeug</div>
+          <button id="openInfoBtn" class="icon-btn" type="button" aria-label="Informationen anzeigen" title="Informationen anzeigen">i</button>
+        </div>
         <h1>Cover Trainer</h1>
         <p>
-          Wähle deinen <code>images</code>-Ordner aus. Die Liste zeigt die Unterordner,
-          aus denen du Bilder mit Cover-Zonen laden oder neue Cover-Dateien erzeugen kannst.
+          Die App erwartet den Ordner <code>./images</code> neben der <code>index.html</code>.
+          Darin liegen nummerierte Unterordner <code>1</code>, <code>2</code>, <code>3</code>, …
+          mit exakt <code>image.png</code> und optional <code>cover.json</code>.
         </p>
       </div>
 
       <div class="sidebar-actions">
-        <input id="folderInput" type="file" webkitdirectory directory multiple hidden />
-        <button id="selectFolderBtn" class="btn btn-primary" type="button">
-          images-Ordner auswählen
+        <button id="refreshFoldersBtn" class="btn btn-primary" type="button">
+          Liste aktualisieren
         </button>
       </div>
 
+      <div class="status-strip">
+        <span class="status-label">Quelle</span>
+        <span class="status-value">./images</span>
+      </div>
+
+      <div class="status-strip status-strip-secondary">
+        <span class="status-label">Scan-Regel</span>
+        <span id="scanRuleValue" class="status-value">Stop nach 100 Lücken</span>
+      </div>
+
       <div class="list-header">
-        <span>Unterordner</span>
+        <span>Ordner</span>
         <span id="folderCount" class="count-pill">0</span>
       </div>
 
       <div id="folderList" class="folder-list empty-state-list">
-        Noch kein Ordner ausgewählt.
+        Lade Ordnerstruktur …
       </div>
     </aside>
 
@@ -41,29 +54,72 @@
           <div class="panel-kicker">Ansicht</div>
           <h2 id="viewTitle">Bereit</h2>
         </div>
-        <div id="contextBadge" class="context-badge">Kein Ordner geladen</div>
+        <div id="contextBadge" class="context-badge">Live Server · ./images</div>
       </header>
 
       <section id="workspace" class="workspace">
         <div class="placeholder-card">
           <h3>So verwendest du die App</h3>
           <ol>
-            <li>Lege die App-Dateien an einen beliebigen Ort.</li>
-            <li>Lege daneben deinen Ordner <code>images</code> mit Unterordnern an.</li>
-            <li>Klicke auf <strong>images-Ordner auswählen</strong> und wähle genau diesen Ordner.</li>
-            <li>Klicke einen Unterordner an.</li>
+            <li>Lege die App-Dateien in einen Ordner.</li>
+            <li>Lege daneben den Ordner <code>images</code> an.</li>
+            <li>Lege darin nummerierte Unterordner an: <code>1</code>, <code>2</code>, <code>3</code>, …</li>
+            <li>Lege in jedem Unterordner genau <code>image.png</code> ab.</li>
+            <li>Optional ergänze <code>cover.json</code>.</li>
+            <li>Starte <code>index.html</code> per VS Code Live Server.</li>
           </ol>
-          <p>
-            Verhalten pro Unterordner:
-          </p>
+          <p>Verhalten pro Ordner:</p>
           <ul>
-            <li><strong>Kein Bild:</strong> Alert mit Fehlermeldung</li>
-            <li><strong>Bild, aber keine cover.json:</strong> Editor zum Erstellen neuer Cover-Zonen</li>
-            <li><strong>Bild und cover.json:</strong> Viewer mit grauen Zonen zum Aufdecken/Abdecken</li>
+            <li><strong>Ordner ohne <code>image.png</code>:</strong> Alert mit Fehlermeldung</li>
+            <li><strong><code>image.png</code> ohne <code>cover.json</code>:</strong> Editor zum Erstellen neuer Cover-Zonen</li>
+            <li><strong><code>image.png</code> mit <code>cover.json</code>:</strong> Viewer mit grauen Zonen zum Aufdecken/Abdecken</li>
           </ul>
         </div>
       </section>
     </main>
+  </div>
+
+  <div id="infoModal" class="modal-backdrop hidden" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
+      <div class="modal-header">
+        <div>
+          <div class="panel-kicker">Information</div>
+          <h3 id="infoModalTitle">Wie die App arbeitet</h3>
+        </div>
+        <button id="closeInfoBtn" class="icon-btn icon-btn-secondary" type="button" aria-label="Dialog schließen">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="info-box">
+          <span class="label">Funktionsweise</span>
+          <div class="modal-copy">
+            <p>Die App liest nicht frei alle Unterordner aus, sondern prüft feste Pfade:</p>
+            <p><code>./images/1/</code>, <code>./images/2/</code>, <code>./images/3/</code>, …</p>
+            <p>Pro Ordner werden diese festen Dateien erwartet:</p>
+            <ul>
+              <li><code>image.png</code> als Bilddatei</li>
+              <li><code>cover.json</code> optional für vorhandene Cover-Zonen</li>
+            </ul>
+            <p>Die Suche stoppt erst, wenn <strong>100 Ordnernummern in Folge fehlen</strong>. Dadurch sind Lücken erlaubt, zum Beispiel <code>1</code>, <code>2</code>, <code>7</code>, <code>18</code>.</p>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <span class="label">Fehlerquellen</span>
+          <div class="modal-copy">
+            <ul>
+              <li>Der Dateiname muss exakt <code>image.png</code> heißen. <code>Image.png</code>, <code>image.PNG</code> oder <code>bild.png</code> werden nicht erkannt.</li>
+              <li>Die Ordnernamen müssen rein numerisch sein: <code>1</code>, <code>2</code>, <code>3</code>, …</li>
+              <li>Wenn mehr als 100 Nummern am Stück fehlen, endet der Scan vorher. Höhere Ordner werden dann nicht mehr angezeigt.</li>
+              <li>Die App muss über einen lokalen Webserver laufen, zum Beispiel VS Code Live Server. Per Doppelklick auf <code>index.html</code> funktioniert es nicht zuverlässig.</li>
+              <li>Ein fehlerhaftes <code>cover.json</code> öffnet den Editor statt des Viewers.</li>
+              <li>Browser- oder Server-Caching kann alte Daten zeigen; dafür gibt es den Button <strong>Liste aktualisieren</strong>.</li>
+              <li>Auf manchen Systemen ist die Schreibweise von Dateinamen case-sensitive.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <template id="folderItemTemplate">

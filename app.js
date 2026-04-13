@@ -1,5 +1,10 @@
+const MISSING_STREAK_LIMIT = 100;
+const IMAGE_FILE_NAME = "image.png";
+const COVER_FILE_NAME = "cover.json";
+
 const state = {
-  rootFolderName: null,
+  rootFolderName: "images",
+  rootFolderUrl: new URL("./images/", document.baseURI).href,
   folders: [],
   activeFolderName: null,
   activeFolder: null,
@@ -21,96 +26,203 @@ const state = {
   },
 };
 
-const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "gif", "bmp", "svg"];
-
-const folderInput = document.getElementById("folderInput");
-const selectFolderBtn = document.getElementById("selectFolderBtn");
 const folderList = document.getElementById("folderList");
 const folderCount = document.getElementById("folderCount");
 const workspace = document.getElementById("workspace");
 const viewTitle = document.getElementById("viewTitle");
 const contextBadge = document.getElementById("contextBadge");
 const folderItemTemplate = document.getElementById("folderItemTemplate");
+const refreshFoldersBtn = document.getElementById("refreshFoldersBtn");
+const openInfoBtn = document.getElementById("openInfoBtn");
+const closeInfoBtn = document.getElementById("closeInfoBtn");
+const infoModal = document.getElementById("infoModal");
 
-selectFolderBtn.addEventListener("click", () => {
-  folderInput.value = "";
-  folderInput.click();
+refreshFoldersBtn.addEventListener("click", async () => {
+  await loadFolders({ keepActiveFolder: true });
 });
-folderInput.addEventListener("change", handleFolderSelection);
 
-function handleFolderSelection(event) {
-  const files = Array.from(event.target.files || []);
-
-  if (!files.length) {
-    return;
+openInfoBtn.addEventListener("click", openInfoModal);
+closeInfoBtn.addEventListener("click", closeInfoModal);
+infoModal.addEventListener("click", (event) => {
+  if (event.target === infoModal) {
+    closeInfoModal();
   }
+});
 
-  const structured = buildFolderStructure(files);
-  state.rootFolderName = structured.rootFolderName;
-  state.folders = structured.folders;
-  state.activeFolderName = null;
-  state.activeFolder = null;
-  state.activeMode = null;
-  resetEditorState();
-  resetViewerState();
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeInfoModal();
+  }
+});
 
-  renderFolderList();
-  renderDefaultWorkspace(
-    structured.folders.length
-      ? `Ordner geladen: ${structured.rootFolderName}`
-      : "Keine passenden Unterordner gefunden"
-  );
-}
+async function loadFolders({ keepActiveFolder = false } = {}) {
+  setFolderListLoading();
+  refreshFoldersBtn.disabled = true;
 
-function buildFolderStructure(files) {
-  const usableFiles = files.filter((file) => file.webkitRelativePath && file.webkitRelativePath.includes("/"));
-  const rootFolderName = usableFiles[0]?.webkitRelativePath.split("/")[0] || "images";
-  const folderMap = new Map();
+  try {
+    const folders = await scanNumberedFolders();
+    state.folders = folders;
 
-  for (const file of usableFiles) {
-    const parts = file.webkitRelativePath.split("/").filter(Boolean);
-    if (parts.length < 3) {
-      continue;
+    if (!keepActiveFolder || !state.activeFolderName) {
+      state.activeFolderName = null;
+      state.activeFolder = null;
+      state.activeMode = null;
+      resetEditorState();
+      resetViewerState();
+      renderDefaultWorkspace(
+        state.folders.length
+          ? `Ordner 1 bis ${state.folders[state.folders.length - 1].name} geprüft`
+          : "Keine passenden nummerierten Unterordner in ./images gefunden"
+      );
+    } else {
+      const stillExists = state.folders.find((folder) => folder.name === state.activeFolderName);
+      if (stillExists) {
+        await openFolder(stillExists.name, { silentAlert: true });
+      } else {
+        state.activeFolderName = null;
+        state.activeFolder = null;
+        state.activeMode = null;
+        resetEditorState();
+        resetViewerState();
+        renderDefaultWorkspace("Bisher geöffneter Ordner ist nicht mehr vorhanden");
+      }
     }
 
-    const folderName = parts[1];
-    const relativeWithinFolder = parts.slice(2).join("/");
-
-    if (!folderMap.has(folderName)) {
-      folderMap.set(folderName, {
-        name: folderName,
-        files: [],
-      });
-    }
-
-    folderMap.get(folderName).files.push({
-      file,
-      name: file.name,
-      relativeWithinFolder,
-      lowerName: file.name.toLowerCase(),
-      extension: getExtension(file.name),
-    });
+    renderFolderList();
+  } catch (error) {
+    console.error(error);
+    state.folders = [];
+    folderCount.textContent = "0";
+    folderList.className = "folder-list empty-state-list";
+    folderList.textContent = "Ordner konnten nicht geladen werden.";
+    renderDirectoryError(error);
+  } finally {
+    refreshFoldersBtn.disabled = false;
   }
-
-  const folders = Array.from(folderMap.values())
-    .map((folder) => enrichFolder(folder))
-    .sort((a, b) => a.name.localeCompare(b.name, "de", { sensitivity: "base" }));
-
-  return { rootFolderName, folders };
 }
 
-function enrichFolder(folder) {
-  const files = [...folder.files].sort((a, b) => a.relativeWithinFolder.localeCompare(b.relativeWithinFolder, "de"));
-  const imageFiles = files.filter((entry) => IMAGE_EXTENSIONS.includes(entry.extension));
-  const coverFile = files.find((entry) => entry.lowerName === "cover.json");
+function setFolderListLoading() {
+  folderCount.textContent = "…";
+  folderList.className = "folder-list empty-state-list";
+  folderList.textContent = `Prüfe nummerierte Ordner unter ./images mit Stop nach ${MISSING_STREAK_LIMIT} Lücken …`;
+}
+
+async function scanNumberedFolders() {
+  const folders = [];
+  let currentNumber = 1;
+  let missingStreak = 0;
+
+  while (missingStreak < MISSING_STREAK_LIMIT) {
+    const folder = await buildNumberedFolderSummary(currentNumber);
+    if (folder.exists) {
+      folders.push(folder);
+      missingStreak = 0;
+    } else {
+      missingStreak += 1;
+    }
+    currentNumber += 1;
+  }
+
+  return folders;
+}
+
+async function buildNumberedFolderSummary(folderNumber) {
+  const name = String(folderNumber);
+  const folderUrl = new URL(`./${name}/`, state.rootFolderUrl).href;
+  const imageUrl = new URL(`./${name}/${IMAGE_FILE_NAME}`, state.rootFolderUrl).href;
+  const coverUrl = new URL(`./${name}/${COVER_FILE_NAME}`, state.rootFolderUrl).href;
+
+  const folderExists = await resourceExists(folderUrl, { treatHtmlAsSuccess: true });
+  if (!folderExists) {
+    return {
+      name,
+      index: folderNumber,
+      url: folderUrl,
+      exists: false,
+      imageCount: 0,
+      hasImage: false,
+      hasCover: false,
+      coverState: "missing",
+      imageUrl: null,
+      imageFileName: null,
+      coverUrl: null,
+    };
+  }
+
+  const hasImage = await resourceExists(imageUrl);
+  const hasCover = await resourceExists(coverUrl);
+
+  let coverState = "missing";
+  if (hasCover) {
+    try {
+      await fetchJsonFile(coverUrl);
+      coverState = "valid";
+    } catch {
+      coverState = "invalid";
+    }
+  }
 
   return {
-    ...folder,
-    files,
-    imageFile: imageFiles[0] || null,
-    imageCount: imageFiles.length,
-    coverFile: coverFile || null,
+    name,
+    index: folderNumber,
+    url: folderUrl,
+    exists: true,
+    imageCount: hasImage ? 1 : 0,
+    hasImage,
+    hasCover,
+    coverState,
+    imageUrl: hasImage ? imageUrl : null,
+    imageFileName: hasImage ? IMAGE_FILE_NAME : null,
+    coverUrl: hasCover ? coverUrl : null,
   };
+}
+
+async function resourceExists(url, { treatHtmlAsSuccess = false } = {}) {
+  try {
+    const headResponse = await fetch(url, {
+      method: "HEAD",
+      cache: "no-store",
+    });
+
+    if (headResponse.ok) {
+      return true;
+    }
+
+    if (headResponse.status === 404) {
+      return false;
+    }
+
+    if (headResponse.status !== 405 && headResponse.status !== 501) {
+      return false;
+    }
+  } catch {
+    // Fallback below.
+  }
+
+  try {
+    const getResponse = await fetch(url, {
+      method: "GET",
+      cache: "no-store",
+      headers: treatHtmlAsSuccess ? { Accept: "text/html,*/*" } : undefined,
+    });
+
+    if (!getResponse.ok) {
+      return false;
+    }
+
+    if (!treatHtmlAsSuccess) {
+      return true;
+    }
+
+    const contentType = getResponse.headers.get("content-type") || "";
+    if (contentType.includes("text/html") || contentType.includes("text/plain")) {
+      return true;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function renderFolderList() {
@@ -118,7 +230,7 @@ function renderFolderList() {
 
   if (!state.folders.length) {
     folderList.className = "folder-list empty-state-list";
-    folderList.textContent = "Im gewählten Ordner wurden keine Unterordner mit Dateien gefunden.";
+    folderList.textContent = "Im Ordner ./images wurden keine nummerierten Unterordner erkannt.";
     return;
   }
 
@@ -144,22 +256,22 @@ function renderFolderList() {
 }
 
 function buildFolderMeta(folder) {
-  if (!folder.imageFile) {
-    return "Kein Bild gefunden";
+  if (!folder.hasImage) {
+    return `Ordner vorhanden · ${IMAGE_FILE_NAME} fehlt`;
   }
 
-  if (!folder.coverFile) {
-    return folder.imageCount > 1
-      ? `${folder.imageCount} Bilder · kein cover.json`
-      : "Bild vorhanden · kein cover.json";
+  if (folder.coverState === "invalid") {
+    return `${IMAGE_FILE_NAME} vorhanden · ungültiges ${COVER_FILE_NAME}`;
   }
 
-  return folder.imageCount > 1
-    ? `${folder.imageCount} Bilder · cover.json vorhanden`
-    : "Bild und cover.json vorhanden";
+  if (!folder.hasCover) {
+    return `${IMAGE_FILE_NAME} vorhanden · kein ${COVER_FILE_NAME}`;
+  }
+
+  return `${IMAGE_FILE_NAME} und ${COVER_FILE_NAME} vorhanden`;
 }
 
-async function openFolder(folderName) {
+async function openFolder(folderName, { silentAlert = false } = {}) {
   const folder = state.folders.find((entry) => entry.name === folderName);
   if (!folder) {
     return;
@@ -169,38 +281,55 @@ async function openFolder(folderName) {
   state.activeFolder = folder;
   renderFolderList();
 
-  if (!folder.imageFile) {
-    window.alert(`Im Ordner "${folder.name}" wurde kein Bild gefunden.`);
-    renderDefaultWorkspace(`Fehler in ${folder.name}`);
-    return;
-  }
-
-  if (!folder.coverFile) {
-    await openEditor(folder);
-    return;
-  }
-
   try {
-    const rawText = await readTextFile(folder.coverFile.file);
-    const rawJson = JSON.parse(rawText);
-    await openViewer(folder, rawJson);
+    if (!folder.imageUrl) {
+      if (!silentAlert) {
+        window.alert(`Im Ordner "${folder.name}" wurde keine ${IMAGE_FILE_NAME} gefunden.`);
+      }
+      renderDefaultWorkspace(`Fehler in Ordner ${folder.name}`);
+      return;
+    }
+
+    if (folder.coverState === "invalid") {
+      if (!silentAlert) {
+        window.alert(`${COVER_FILE_NAME} in "${folder.name}" ist ungültig. Der Editor wird stattdessen geöffnet.`);
+      }
+      await openEditor(folder);
+      return;
+    }
+
+    if (!folder.coverUrl) {
+      await openEditor(folder);
+      return;
+    }
+
+    const coverData = await fetchJsonFile(folder.coverUrl);
+    await openViewer(folder, coverData);
   } catch (error) {
     console.error(error);
-    window.alert(`cover.json in "${folder.name}" ist ungültig. Der Editor wird stattdessen geöffnet.`);
-    await openEditor(folder);
+    renderDirectoryError(error);
   }
+}
+
+async function fetchJsonFile(url) {
+  const response = await fetch(url, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`Datei konnte nicht geladen werden: ${url} (HTTP ${response.status})`);
+  }
+
+  const text = await response.text();
+  return JSON.parse(text);
 }
 
 async function openEditor(folder) {
   state.activeMode = "editor";
   resetViewerState();
 
-  const imageUrl = await readImageAsDataUrl(folder.imageFile.file);
-  const imageNatural = await getImageDimensions(imageUrl);
+  const imageNatural = await getImageDimensions(folder.imageUrl);
 
-  state.editor.imageUrl = imageUrl;
+  state.editor.imageUrl = folder.imageUrl;
   state.editor.imageNatural = imageNatural;
-  state.editor.imageFileName = folder.imageFile.name;
+  state.editor.imageFileName = folder.imageFileName;
   state.editor.rects = [];
   state.editor.previewRect = null;
   state.editor.pointer = null;
@@ -212,13 +341,12 @@ async function openViewer(folder, rawCoverJson) {
   state.activeMode = "viewer";
   resetEditorState();
 
-  const imageUrl = await readImageAsDataUrl(folder.imageFile.file);
-  const imageNatural = await getImageDimensions(imageUrl);
+  const imageNatural = await getImageDimensions(folder.imageUrl);
   const normalized = normalizeCoverJson(rawCoverJson, imageNatural);
 
-  state.viewer.imageUrl = imageUrl;
+  state.viewer.imageUrl = folder.imageUrl;
   state.viewer.imageNatural = imageNatural;
-  state.viewer.imageFileName = folder.imageFile.name;
+  state.viewer.imageFileName = folder.imageFileName;
   state.viewer.rects = normalized.rectangles;
   state.viewer.visibleMask = normalized.rectangles.map(() => true);
 
@@ -236,23 +364,28 @@ function normalizeCoverJson(raw, fallbackImageNatural) {
     ?? numberOrNull(raw?.height)
     ?? fallbackImageNatural.height;
 
-  const sourceRects = Array.isArray(raw?.rectangles)
-    ? raw.rectangles
-    : Array.isArray(raw?.rects)
-      ? raw.rects
-      : Array.isArray(raw?.boxes)
-        ? raw.boxes
-        : [];
+  if (!Array.isArray(raw?.rectangles)) {
+    throw new Error("cover.json enthält kein gültiges Array 'rectangles'.");
+  }
 
-  const rectangles = sourceRects
-    .map((rect, index) => ({
-      id: rect.id || `rect-${index + 1}`,
-      x: clampNonNegative(numberOrNull(rect.x) ?? 0),
-      y: clampNonNegative(numberOrNull(rect.y) ?? 0),
-      width: clampNonNegative(numberOrNull(rect.width) ?? numberOrNull(rect.w) ?? 0),
-      height: clampNonNegative(numberOrNull(rect.height) ?? numberOrNull(rect.h) ?? 0),
-    }))
-    .filter((rect) => rect.width > 0 && rect.height > 0);
+  const rectangles = raw.rectangles.map((rect, index) => {
+    const x = numberOrNull(rect?.x);
+    const y = numberOrNull(rect?.y);
+    const rectWidth = numberOrNull(rect?.width);
+    const rectHeight = numberOrNull(rect?.height);
+
+    if ([x, y, rectWidth, rectHeight].some((value) => value === null)) {
+      throw new Error(`Rechteck ${index + 1} in cover.json ist unvollständig.`);
+    }
+
+    return {
+      id: rect?.id || `rect-${index + 1}`,
+      x: clamp(Math.round(x), 0, width),
+      y: clamp(Math.round(y), 0, height),
+      width: clampNonNegative(Math.round(rectWidth)),
+      height: clampNonNegative(Math.round(rectHeight)),
+    };
+  }).filter((rect) => rect.width > 0 && rect.height > 0);
 
   return {
     image: {
@@ -263,17 +396,33 @@ function normalizeCoverJson(raw, fallbackImageNatural) {
   };
 }
 
-function renderDefaultWorkspace(title = "Bereit") {
-  viewTitle.textContent = title;
-  contextBadge.textContent = state.rootFolderName
-    ? `${state.rootFolderName} ausgewählt`
-    : "Kein Ordner geladen";
+function renderDefaultWorkspace(message = "Ordnerliste geladen") {
+  viewTitle.textContent = "Bereit";
+  contextBadge.textContent = `Live Server · ./images · ${message}`;
 
   workspace.innerHTML = `
     <div class="placeholder-card">
-      <h3>Bereit</h3>
-      <p>Wähle links einen Unterordner aus der Liste aus.</p>
-      <p class="meta-text">${escapeHtml(title)}</p>
+      <h3>Bereit zum Lernen</h3>
+      <p>${escapeHtml(message)}</p>
+      <ol>
+        <li>Lege nummerierte Ordner in <code>./images</code> an.</li>
+        <li>Lege je Ordner exakt <code>image.png</code> ab.</li>
+        <li>Optional lege <code>cover.json</code> dazu.</li>
+        <li>Klicke links auf einen Ordner.</li>
+      </ol>
+    </div>
+  `;
+}
+
+function renderDirectoryError(error) {
+  viewTitle.textContent = "Fehler";
+  contextBadge.textContent = "Fehler beim Laden";
+
+  workspace.innerHTML = `
+    <div class="error-card">
+      <h3 class="error-title">Ordnerstruktur konnte nicht verarbeitet werden</h3>
+      <p class="error-note">${escapeHtml(error?.message || "Unbekannter Fehler")}</p>
+      <p class="error-note">Prüfe, ob die App über VS Code Live Server läuft und ob <code>./images</code> vorhanden ist.</p>
     </div>
   `;
 }
@@ -287,12 +436,12 @@ function renderEditorWorkspace(folder) {
       <div class="toolbar">
         <div>
           <h3>${escapeHtml(folder.name)}</h3>
-          <p class="editor-note">Ziehe Rechtecke über Bereiche, die beim Lernen verdeckt sein sollen.</p>
+          <p class="editor-note">Zeichne per Maus oder Touch Rechtecke auf das Bild. Die Koordinaten werden relativ zur nativen Bildgröße gespeichert.</p>
         </div>
         <div class="toolbar-actions">
-          <button id="undoRectBtn" class="btn btn-secondary" type="button">Letztes löschen</button>
-          <button id="clearRectsBtn" class="btn btn-danger" type="button">Alle löschen</button>
-          <button id="downloadCoverBtn" class="btn btn-primary" type="button">cover.json downloaden</button>
+          <button id="undoRectBtn" class="btn btn-secondary" type="button">Letztes Rechteck entfernen</button>
+          <button id="clearRectsBtn" class="btn btn-danger" type="button">Alle Rechtecke löschen</button>
+          <button id="downloadCoverBtn" class="btn btn-primary" type="button">cover.json herunterladen</button>
         </div>
       </div>
 
@@ -597,7 +746,7 @@ function downloadCoverJson() {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = "cover.json";
+  anchor.download = COVER_FILE_NAME;
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
@@ -621,36 +770,13 @@ function resetViewerState() {
   state.viewer.imageFileName = null;
 }
 
-function readTextFile(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(reader.error || new Error("Datei konnte nicht gelesen werden."));
-    reader.readAsText(file);
-  });
-}
-
-function readImageAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(reader.error || new Error("Bild konnte nicht gelesen werden."));
-    reader.readAsDataURL(file);
-  });
-}
-
 function getImageDimensions(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
-    img.onerror = reject;
+    img.onerror = () => reject(new Error("Bild konnte nicht geladen werden."));
     img.src = src;
   });
-}
-
-function getExtension(fileName) {
-  const parts = fileName.toLowerCase().split(".");
-  return parts.length > 1 ? parts.pop() : "";
 }
 
 function numberOrNull(value) {
@@ -666,6 +792,16 @@ function clampNonNegative(value) {
   return Math.max(0, value);
 }
 
+function openInfoModal() {
+  infoModal.classList.remove("hidden");
+  infoModal.setAttribute("aria-hidden", "false");
+}
+
+function closeInfoModal() {
+  infoModal.classList.add("hidden");
+  infoModal.setAttribute("aria-hidden", "true");
+}
+
 function escapeHtml(value) {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -676,3 +812,4 @@ function escapeHtml(value) {
 }
 
 renderDefaultWorkspace();
+loadFolders();
