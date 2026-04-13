@@ -58,14 +58,15 @@ function loadStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      return { folders: {} };
+      return { folders: {}, lastActiveFolderName: null };
     }
     const parsed = JSON.parse(raw);
     return {
       folders: typeof parsed?.folders === "object" && parsed.folders ? parsed.folders : {},
+      lastActiveFolderName: typeof parsed?.lastActiveFolderName === "string" ? parsed.lastActiveFolderName : null,
     };
   } catch {
-    return { folders: {} };
+    return { folders: {}, lastActiveFolderName: null };
   }
 }
 
@@ -87,8 +88,14 @@ function patchFolderMemory(folderName, patch) {
   saveStorage();
 }
 
+function setLastActiveFolder(folderName) {
+  state.storage.lastActiveFolderName = folderName || null;
+  saveStorage();
+}
+
 function markFolderOpened(folderName) {
   patchFolderMemory(folderName, { lastOpenedAt: new Date().toISOString() });
+  setLastActiveFolder(folderName);
 }
 
 function getSavedVisibleMask(folderName, rectCount) {
@@ -120,16 +127,17 @@ async function loadFolders() {
       renderDefaultWorkspace("Keine Einträge gefunden");
     }
 
-    const activeFolderName = state.activeFolderName;
+    const preferredFolderName = state.activeFolderName || state.storage.lastActiveFolderName;
     renderFolderList();
 
-    if (activeFolderName) {
-      const stillExists = folders.find((folder) => folder.name === activeFolderName);
+    if (preferredFolderName) {
+      const stillExists = folders.find((folder) => folder.name === preferredFolderName);
       if (stillExists) {
         await openFolder(stillExists.name, { silentAlert: true, updateLastOpened: false });
       } else {
         clearActiveState();
-        renderDefaultWorkspace("Aktiver Eintrag nicht mehr gefunden");
+        setLastActiveFolder(null);
+        renderDefaultWorkspace("Letzter Eintrag nicht mehr gefunden");
       }
     }
   } catch (error) {
@@ -148,6 +156,7 @@ function clearActiveState() {
   state.activeFolderName = null;
   state.activeFolder = null;
   state.activeMode = null;
+  setLastActiveFolder(null);
   resetEditorState();
   resetViewerState();
 }
@@ -333,6 +342,7 @@ async function openFolder(folderName, { silentAlert = false, updateLastOpened = 
 
   state.activeFolderName = folder.name;
   state.activeFolder = folder;
+  setLastActiveFolder(folder.name);
   renderFolderList();
 
   try {

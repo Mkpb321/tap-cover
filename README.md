@@ -47,8 +47,9 @@ Wenn `title` in `cover.json` vorhanden ist, wird er in der Ordnerliste angezeigt
 Tap Cover speichert lokal im Browser:
 - Zeitpunkt des letzten Öffnens pro Eintrag
 - Sichtbarkeit der Cover-Zonen pro Eintrag
+- welcher Eintrag zuletzt geöffnet war
 
-Beim erneuten Öffnen wird der letzte Auf-/Zu-Zustand wiederhergestellt, solange die Anzahl der Rechtecke unverändert ist.
+Beim Laden der Seite öffnet Tap Cover automatisch wieder den zuletzt geöffneten Eintrag, sofern er noch gefunden wird. Zusätzlich wird der letzte Auf-/Zu-Zustand wiederhergestellt, solange die Anzahl der Rechtecke unverändert ist.
 
 ## Hosting
 Die App muss über einen Webserver laufen, z. B.:
