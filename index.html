@@ -16,7 +16,7 @@
         </div>
         <h1>Tap Cover</h1>
         <p>
-          Die App erwartet den Ordner <code>./images</code> neben der <code>index.html</code>.
+          Die App erwartet den Ordner <code>./images</code> relativ zur <code>index.html</code>.
           Darin liegen nummerierte Unterordner <code>1</code>, <code>2</code>, <code>3</code>, …
           mit exakt <code>image.png</code> und optional <code>cover.json</code>.
         </p>
@@ -54,7 +54,7 @@
           <div class="panel-kicker">Ansicht</div>
           <h2 id="viewTitle">Bereit</h2>
         </div>
-        <div id="contextBadge" class="context-badge">Live Server · ./images</div>
+        <div id="contextBadge" class="context-badge">Statisches Hosting · ./images</div>
       </header>
 
       <section id="workspace" class="workspace">
@@ -66,11 +66,11 @@
             <li>Lege darin nummerierte Unterordner an: <code>1</code>, <code>2</code>, <code>3</code>, …</li>
             <li>Lege in jedem Unterordner genau <code>image.png</code> ab.</li>
             <li>Optional ergänze <code>cover.json</code>.</li>
-            <li>Starte <code>index.html</code> per VS Code Live Server.</li>
+            <li>Rufe die App über einen Webserver auf, z. B. VS Code Live Server oder GitHub Pages.</li>
           </ol>
           <p>Verhalten pro Ordner:</p>
           <ul>
-            <li><strong>Ordner ohne <code>image.png</code>:</strong> Alert mit Fehlermeldung</li>
+            <li><strong>Eintrag ohne <code>image.png</code>:</strong> Alert mit Fehlermeldung</li>
             <li><strong><code>image.png</code> ohne <code>cover.json</code>:</strong> Editor zum Erstellen neuer Cover-Zonen</li>
             <li><strong><code>image.png</code> mit <code>cover.json</code>:</strong> Viewer mit grauen Zonen zum Aufdecken/Abdecken</li>
           </ul>
@@ -117,12 +117,12 @@
           <div class="modal-copy">
             <ol>
               <li>Lege ein Lernbild als <code>image.png</code> in einen nummerierten Unterordner.</li>
-              <li>Starte <code>index.html</code> über VS Code mit <strong>Open with Live Server</strong>.</li>
-              <li>Die App prüft automatisch die Ordner <code>1</code>, <code>2</code>, <code>3</code>, …</li>
+              <li>Rufe die App über einen Webserver auf, z. B. mit <strong>Open with Live Server</strong> oder über GitHub Pages.</li>
+              <li>Die App prüft automatisch die Nummern <code>1</code>, <code>2</code>, <code>3</code>, …</li>
               <li>Klicke links auf einen Eintrag.</li>
               <li>Gibt es nur <code>image.png</code>, öffnet sich der Editor zum Zeichnen der Cover-Rechtecke.</li>
               <li>Nach dem Zeichnen lädst du eine neue <code>cover.json</code> herunter und legst sie manuell in denselben Ordner.</li>
-              <li>Beim nächsten Öffnen des Ordners startet direkt die Lernansicht mit den gespeicherten Rechtecken.</li>
+              <li>Beim nächsten Öffnen des Eintrags startet direkt die Lernansicht mit den gespeicherten Rechtecken.</li>
             </ol>
           </div>
         </div>
@@ -131,7 +131,7 @@
           <span class="label">Verhalten pro Ordner</span>
           <div class="modal-copy">
             <ul>
-              <li><strong>Ordner ohne <code>image.png</code>:</strong> Es erscheint eine Fehlermeldung per Alert.</li>
+              <li><strong>Eintrag ohne <code>image.png</code>:</strong> Es erscheint eine Fehlermeldung per Alert.</li>
               <li><strong><code>image.png</code> ohne <code>cover.json</code>:</strong> Der Editor zum Erstellen der Cover-Zonen wird geöffnet.</li>
               <li><strong><code>image.png</code> mit gültiger <code>cover.json</code>:</strong> Die Lernansicht wird geöffnet.</li>
               <li><strong>Ungültige <code>cover.json</code>:</strong> Es erscheint ein Hinweis, danach wird der Editor geöffnet.</li>
@@ -155,8 +155,9 @@
         <div class="info-box">
           <span class="label">Warum die App so arbeitet</span>
           <div class="modal-copy">
-            <p>Ein normales Browser-Frontend darf lokale Ordner nicht frei durchsuchen. Deshalb arbeitet Tap Cover mit einer festen, vorhersagbaren Struktur statt mit beliebigen Dateinamen oder frei gelesenen Verzeichnisbäumen.</p>
-            <p>Die App prüft bekannte Pfade und stoppt erst, wenn <strong>100 Ordnernummern in Folge fehlen</strong>. Dadurch sind Lücken erlaubt, zum Beispiel <code>1</code>, <code>2</code>, <code>7</code>, <code>18</code>.</p>
+            <p>Ein normales Browser-Frontend darf Ordner nicht frei auflisten. Deshalb arbeitet Tap Cover mit einer festen, vorhersagbaren Struktur statt mit frei gelesenen Verzeichnisbäumen.</p>
+            <p>Die App prüft direkt die Dateien <code>image.png</code> und <code>cover.json</code> unter bekannten Pfaden wie <code>./images/17/image.png</code>. Ein nummerierter Eintrag gilt als vorhanden, sobald mindestens eine dieser beiden Dateien erreichbar ist.</p>
+            <p>Der Scan stoppt erst, wenn <strong>100 Nummern in Folge weder ein Bild noch eine JSON-Datei liefern</strong>. Dadurch sind Lücken erlaubt, zum Beispiel <code>1</code>, <code>2</code>, <code>7</code>, <code>18</code>.</p>
           </div>
         </div>
 
@@ -166,11 +167,12 @@
             <ul>
               <li>Der Dateiname muss exakt <code>image.png</code> heißen. Abweichungen wie <code>Image.png</code>, <code>image.PNG</code> oder <code>bild.png</code> werden nicht erkannt.</li>
               <li>Die Ordnernamen müssen rein numerisch sein: <code>1</code>, <code>2</code>, <code>3</code>, …</li>
-              <li>Wenn mehr als 100 Nummern am Stück fehlen, endet der Scan vorher. Höhere Ordner werden dann nicht mehr angezeigt.</li>
-              <li>Die App muss über einen lokalen Webserver laufen, zum Beispiel VS Code Live Server. Ein Doppelklick auf <code>index.html</code> reicht nicht.</li>
+              <li>Wenn mehr als 100 Nummern am Stück weder <code>image.png</code> noch <code>cover.json</code> liefern, endet der Scan vorher. Höhere Ordner werden dann nicht mehr angezeigt.</li>
+              <li>Die App muss über einen Webserver laufen, zum Beispiel VS Code Live Server oder GitHub Pages. Ein Doppelklick auf <code>index.html</code> reicht nicht.</li>
               <li>Eine fehlerhafte <code>cover.json</code> führt nicht zum Viewer, sondern zum Editor.</li>
               <li>Nach dem Herunterladen der <code>cover.json</code> muss diese manuell in den passenden Bildordner verschoben werden.</li>
               <li>Browser- oder Server-Caching kann alte Daten zeigen; dafür gibt es den Button <strong>Liste aktualisieren</strong>.</li>
+              <li>Leere Ordner ohne <code>image.png</code> und ohne <code>cover.json</code> sind für statisches Hosting unsichtbar und erscheinen daher nicht in der Liste.</li>
               <li>Auf manchen Systemen ist die Schreibweise von Dateinamen case-sensitive.</li>
             </ul>
           </div>

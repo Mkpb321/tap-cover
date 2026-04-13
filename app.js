@@ -71,7 +71,7 @@ async function loadFolders({ keepActiveFolder = false } = {}) {
       resetViewerState();
       renderDefaultWorkspace(
         state.folders.length
-          ? `Ordner 1 bis ${state.folders[state.folders.length - 1].name} geprüft`
+          ? `Nummern 1 bis ${state.folders[state.folders.length - 1].name} geprüft`
           : "Keine passenden nummerierten Unterordner in ./images gefunden"
       );
     } else {
@@ -84,7 +84,7 @@ async function loadFolders({ keepActiveFolder = false } = {}) {
         state.activeMode = null;
         resetEditorState();
         resetViewerState();
-        renderDefaultWorkspace("Bisher geöffneter Ordner ist nicht mehr vorhanden");
+        renderDefaultWorkspace("Bisher geöffneter Eintrag ist nicht mehr vorhanden");
       }
     }
 
@@ -128,16 +128,19 @@ async function scanNumberedFolders() {
 
 async function buildNumberedFolderSummary(folderNumber) {
   const name = String(folderNumber);
-  const folderUrl = new URL(`./${name}/`, state.rootFolderUrl).href;
+  const baseUrl = new URL(`./${name}/`, state.rootFolderUrl).href;
   const imageUrl = new URL(`./${name}/${IMAGE_FILE_NAME}`, state.rootFolderUrl).href;
   const coverUrl = new URL(`./${name}/${COVER_FILE_NAME}`, state.rootFolderUrl).href;
 
-  const folderExists = await resourceExists(folderUrl, { treatHtmlAsSuccess: true });
-  if (!folderExists) {
+  const hasImage = await resourceExists(imageUrl);
+  const hasCover = await resourceExists(coverUrl);
+  const exists = hasImage || hasCover;
+
+  if (!exists) {
     return {
       name,
       index: folderNumber,
-      url: folderUrl,
+      url: baseUrl,
       exists: false,
       imageCount: 0,
       hasImage: false,
@@ -148,9 +151,6 @@ async function buildNumberedFolderSummary(folderNumber) {
       coverUrl: null,
     };
   }
-
-  const hasImage = await resourceExists(imageUrl);
-  const hasCover = await resourceExists(coverUrl);
 
   let coverState = "missing";
   if (hasCover) {
@@ -165,8 +165,8 @@ async function buildNumberedFolderSummary(folderNumber) {
   return {
     name,
     index: folderNumber,
-    url: folderUrl,
-    exists: true,
+    url: baseUrl,
+    exists,
     imageCount: hasImage ? 1 : 0,
     hasImage,
     hasCover,
@@ -177,7 +177,7 @@ async function buildNumberedFolderSummary(folderNumber) {
   };
 }
 
-async function resourceExists(url, { treatHtmlAsSuccess = false } = {}) {
+async function resourceExists(url) {
   try {
     const headResponse = await fetch(url, {
       method: "HEAD",
@@ -203,23 +203,9 @@ async function resourceExists(url, { treatHtmlAsSuccess = false } = {}) {
     const getResponse = await fetch(url, {
       method: "GET",
       cache: "no-store",
-      headers: treatHtmlAsSuccess ? { Accept: "text/html,*/*" } : undefined,
     });
 
-    if (!getResponse.ok) {
-      return false;
-    }
-
-    if (!treatHtmlAsSuccess) {
-      return true;
-    }
-
-    const contentType = getResponse.headers.get("content-type") || "";
-    if (contentType.includes("text/html") || contentType.includes("text/plain")) {
-      return true;
-    }
-
-    return true;
+    return getResponse.ok;
   } catch {
     return false;
   }
@@ -230,7 +216,7 @@ function renderFolderList() {
 
   if (!state.folders.length) {
     folderList.className = "folder-list empty-state-list";
-    folderList.textContent = "Im Ordner ./images wurden keine nummerierten Unterordner erkannt.";
+    folderList.textContent = "Unter ./images wurden keine nummerierten Einträge mit image.png oder cover.json erkannt.";
     return;
   }
 
@@ -257,7 +243,7 @@ function renderFolderList() {
 
 function buildFolderMeta(folder) {
   if (!folder.hasImage) {
-    return `Ordner vorhanden · ${IMAGE_FILE_NAME} fehlt`;
+    return `${IMAGE_FILE_NAME} fehlt${folder.hasCover ? ` · ${COVER_FILE_NAME} vorhanden` : ""}`;
   }
 
   if (folder.coverState === "invalid") {
@@ -398,7 +384,7 @@ function normalizeCoverJson(raw, fallbackImageNatural) {
 
 function renderDefaultWorkspace(message = "Ordnerliste geladen") {
   viewTitle.textContent = "Bereit";
-  contextBadge.textContent = `Live Server · ./images · ${message}`;
+  contextBadge.textContent = `Statisches Hosting · ./images · ${message}`;
 
   workspace.innerHTML = `
     <div class="placeholder-card">
@@ -422,7 +408,7 @@ function renderDirectoryError(error) {
     <div class="error-card">
       <h3 class="error-title">Ordnerstruktur konnte nicht verarbeitet werden</h3>
       <p class="error-note">${escapeHtml(error?.message || "Unbekannter Fehler")}</p>
-      <p class="error-note">Prüfe, ob die App über VS Code Live Server läuft und ob <code>./images</code> vorhanden ist.</p>
+      <p class="error-note">Prüfe, ob die App über einen Webserver läuft, ob <code>./images</code> im Publish-Root liegt und ob die Dateien unter den erwarteten Pfaden erreichbar sind.</p>
     </div>
   `;
 }
