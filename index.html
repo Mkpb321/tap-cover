@@ -8,106 +8,49 @@
 </head>
 <body>
   <div class="app-shell">
-    <aside class="sidebar">
-      <div class="brand-block">
-        <div class="brand-topline">
-          <div class="brand-kicker">Lernwerkzeug</div>
-          <button id="openInfoBtn" class="icon-btn" type="button" aria-label="Informationen anzeigen" title="Informationen anzeigen">i</button>
+    <header class="topbar">
+      <h1>Tap Cover</h1>
+      <div class="topbar-actions">
+        <button id="refreshFoldersBtn" class="icon-btn" type="button" aria-label="Liste aktualisieren" title="Liste aktualisieren">↻</button>
+        <button id="openInfoBtn" class="icon-btn" type="button" aria-label="Informationen anzeigen" title="Informationen anzeigen">i</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="list-panel">
+        <div class="section-head">
+          <span>Ordner</span>
+          <span id="folderCount" class="count-pill">0</span>
         </div>
-        <h1>Tap Cover3</h1>
-        <p>
-          Die App erwartet den Ordner <code>./images</code> relativ zur <code>index.html</code>.
-          Darin liegen nummerierte Unterordner <code>1</code>, <code>2</code>, <code>3</code>, …
-          mit exakt <code>image.png</code> und optional <code>cover.json</code>.
-        </p>
-      </div>
+        <div id="folderList" class="folder-list empty-state-list">Lade …</div>
+      </aside>
 
-      <div class="sidebar-actions">
-        <button id="refreshFoldersBtn" class="btn btn-primary" type="button">
-          Liste aktualisieren
-        </button>
-      </div>
-
-      <div class="status-strip">
-        <span class="status-label">Quelle</span>
-        <span class="status-value">./images</span>
-      </div>
-
-      <div class="status-strip status-strip-secondary">
-        <span class="status-label">Scan-Regel</span>
-        <span id="scanRuleValue" class="status-value">Stop nach 100 Lücken</span>
-      </div>
-
-      <div class="list-header">
-        <span>Ordner</span>
-        <span id="folderCount" class="count-pill">0</span>
-      </div>
-
-      <div id="folderList" class="folder-list empty-state-list">
-        Lade Ordnerstruktur …
-      </div>
-    </aside>
-
-    <main class="main-panel">
-      <header class="panel-header">
-        <div>
-          <div class="panel-kicker">Ansicht</div>
+      <main class="workspace-panel">
+        <div class="workspace-head">
           <h2 id="viewTitle">Bereit</h2>
+          <span id="contextBadge" class="context-badge">./images</span>
         </div>
-        <div id="contextBadge" class="context-badge">Statisches Hosting · ./images</div>
-      </header>
-
-      <section id="workspace" class="workspace">
-        <div class="placeholder-card">
-          <h3>So verwendest du die App</h3>
-          <ol>
-            <li>Lege die App-Dateien in einen Ordner.</li>
-            <li>Lege daneben den Ordner <code>images</code> an.</li>
-            <li>Lege darin nummerierte Unterordner an: <code>1</code>, <code>2</code>, <code>3</code>, …</li>
-            <li>Lege in jedem Unterordner genau <code>image.png</code> ab.</li>
-            <li>Optional ergänze <code>cover.json</code>.</li>
-            <li>Rufe die App über einen Webserver auf, z. B. VS Code Live Server oder GitHub Pages.</li>
-          </ol>
-          <p>Verhalten pro Ordner:</p>
-          <ul>
-            <li><strong>Eintrag ohne <code>image.png</code>:</strong> Alert mit Fehlermeldung</li>
-            <li><strong><code>image.png</code> ohne <code>cover.json</code>:</strong> Editor zum Erstellen neuer Cover-Zonen</li>
-            <li><strong><code>image.png</code> mit <code>cover.json</code>:</strong> Viewer mit grauen Zonen zum Aufdecken/Abdecken</li>
-          </ul>
-        </div>
-      </section>
-    </main>
+        <section id="workspace" class="workspace"></section>
+      </main>
+    </div>
   </div>
 
   <div id="infoModal" class="modal-backdrop hidden" aria-hidden="true">
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
       <div class="modal-header">
-        <div>
-          <div class="panel-kicker">Information</div>
-          <h3 id="infoModalTitle">Wie Tap Cover funktioniert</h3>
-        </div>
+        <h3 id="infoModalTitle">Tap Cover · Info</h3>
         <button id="closeInfoBtn" class="icon-btn icon-btn-secondary" type="button" aria-label="Dialog schließen">×</button>
       </div>
 
       <div class="modal-body">
         <div class="info-box">
-          <span class="label">Zweck der App</span>
+          <span class="label">Ablage</span>
           <div class="modal-copy">
-            <p><strong>Tap Cover</strong> ist für Lernbilder gedacht, bei denen bestimmte Bereiche zunächst abgedeckt und beim Lernen einzeln wieder aufgedeckt werden sollen.</p>
-            <p>Typischer Einsatz: Du legst ein beschriftetes Bild ab, deckst Begriffe oder markierte Bereiche mit Rechtecken ab und tippst sie beim Abfragen nach und nach frei.</p>
-          </div>
-        </div>
-
-        <div class="info-box">
-          <span class="label">Ordnerstruktur</span>
-          <div class="modal-copy">
-            <p>Die App erwartet neben der <code>index.html</code> einen Ordner <code>images</code>.</p>
-            <p>Darin liegen nummerierte Unterordner:</p>
-            <p><code>./images/1/</code>, <code>./images/2/</code>, <code>./images/3/</code>, …</p>
+            <p>Die App erwartet neben <code>index.html</code> einen Ordner <code>images</code> mit nummerierten Unterordnern <code>1</code>, <code>2</code>, <code>3</code> …</p>
             <p>In jedem Unterordner gelten feste Dateinamen:</p>
             <ul>
-              <li><code>image.png</code> als Bilddatei</li>
-              <li><code>cover.json</code> optional für bereits definierte Cover-Zonen</li>
+              <li><code>image.png</code> zwingend für das Bild</li>
+              <li><code>cover.json</code> optional für fertige Cover-Zonen</li>
             </ul>
           </div>
         </div>
@@ -116,64 +59,47 @@
           <span class="label">Workflow</span>
           <div class="modal-copy">
             <ol>
-              <li>Lege ein Lernbild als <code>image.png</code> in einen nummerierten Unterordner.</li>
-              <li>Rufe die App über einen Webserver auf, z. B. mit <strong>Open with Live Server</strong> oder über GitHub Pages.</li>
-              <li>Die App prüft automatisch die Nummern <code>1</code>, <code>2</code>, <code>3</code>, …</li>
-              <li>Klicke links auf einen Eintrag.</li>
-              <li>Gibt es nur <code>image.png</code>, öffnet sich der Editor zum Zeichnen der Cover-Rechtecke.</li>
-              <li>Nach dem Zeichnen lädst du eine neue <code>cover.json</code> herunter und legst sie manuell in denselben Ordner.</li>
-              <li>Beim nächsten Öffnen des Eintrags startet direkt die Lernansicht mit den gespeicherten Rechtecken.</li>
+              <li>Bild als <code>image.png</code> in einen nummerierten Ordner legen.</li>
+              <li>Eintrag in der Liste antippen.</li>
+              <li>Mit <code>cover.json</code> öffnet die Lernansicht, ohne <code>cover.json</code> der Editor.</li>
+              <li>Im Editor Rechtecke zeichnen und <code>cover.json</code> herunterladen.</li>
+              <li>Die heruntergeladene <code>cover.json</code> manuell in denselben Bildordner legen.</li>
+              <li>In der Lernansicht Rechtecke antippen, um sie auf- oder zuzudecken.</li>
             </ol>
           </div>
         </div>
 
         <div class="info-box">
-          <span class="label">Verhalten pro Ordner</span>
+          <span class="label">Scan-Regel</span>
           <div class="modal-copy">
+            <p>Tap Cover prüft direkt bekannte Dateien wie <code>./images/7/image.png</code> und <code>./images/7/cover.json</code>. Es werden keine Ordner-URLs wie <code>./images/7/</code> abgefragt.</p>
+            <p>Der Scan läuft numerisch hoch und stoppt, sobald die Lücke größer als <strong>2</strong> wird, also nach <strong>3 fehlenden Nummern in Folge</strong>.</p>
+            <p>Beispiel: <code>1</code>, <code>2</code>, <code>5</code> funktioniert noch. Fehlen aber etwa <code>8</code>, <code>9</code> und <code>10</code> hintereinander, endet der Scan vor <code>11</code>.</p>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <span class="label">Browser-Speicher</span>
+          <div class="modal-copy">
+            <p>Die App speichert lokal im Browser:</p>
             <ul>
-              <li><strong>Eintrag ohne <code>image.png</code>:</strong> Es erscheint eine Fehlermeldung per Alert.</li>
-              <li><strong><code>image.png</code> ohne <code>cover.json</code>:</strong> Der Editor zum Erstellen der Cover-Zonen wird geöffnet.</li>
-              <li><strong><code>image.png</code> mit gültiger <code>cover.json</code>:</strong> Die Lernansicht wird geöffnet.</li>
-              <li><strong>Ungültige <code>cover.json</code>:</strong> Es erscheint ein Hinweis, danach wird der Editor geöffnet.</li>
+              <li>wann ein Eintrag zuletzt geöffnet wurde</li>
+              <li>welche Cover-Zonen beim letzten Öffnen sichtbar oder verborgen waren</li>
             </ul>
+            <p>Beim nächsten Öffnen eines Eintrags wird dieser Zustand wiederhergestellt, solange die Anzahl der Rechtecke gleich geblieben ist.</p>
           </div>
         </div>
 
         <div class="info-box">
-          <span class="label">Lernansicht</span>
-          <div class="modal-copy">
-            <p>In der Lernansicht starten alle Cover-Zonen zunächst sichtbar und vollständig abgedeckt.</p>
-            <p>Durch Antippen oder Anklicken eines Rechtecks schaltest du genau diese Zone zwischen <strong>abgedeckt</strong> und <strong>aufgedeckt</strong> um.</p>
-            <p>Zusätzlich gibt es Sammelaktionen:</p>
-            <ul>
-              <li><strong>Alle wieder abdecken</strong> setzt alle Rechtecke zurück.</li>
-              <li><strong>Alle aufdecken</strong> macht alle Rechtecke transparent.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="info-box">
-          <span class="label">Warum die App so arbeitet</span>
-          <div class="modal-copy">
-            <p>Ein normales Browser-Frontend darf Ordner nicht frei auflisten. Deshalb arbeitet Tap Cover mit einer festen, vorhersagbaren Struktur statt mit frei gelesenen Verzeichnisbäumen.</p>
-            <p>Die App prüft direkt die Dateien <code>image.png</code> und <code>cover.json</code> unter bekannten Pfaden wie <code>./images/17/image.png</code>. Ordner-URLs wie <code>./images/17/</code> werden bewusst nicht abgefragt, damit die App auch auf GitHub Pages funktioniert. Ein nummerierter Eintrag gilt als vorhanden, sobald mindestens eine dieser beiden Dateien erreichbar ist.</p>
-            <p>Der Scan stoppt erst, wenn <strong>100 Nummern in Folge weder ein Bild noch eine JSON-Datei liefern</strong>. Dadurch sind Lücken erlaubt, zum Beispiel <code>1</code>, <code>2</code>, <code>7</code>, <code>18</code>.</p>
-          </div>
-        </div>
-
-        <div class="info-box">
-          <span class="label">Fehlerquellen</span>
+          <span class="label">Typische Fehlerquellen</span>
           <div class="modal-copy">
             <ul>
-              <li>Der Dateiname muss exakt <code>image.png</code> heißen. Abweichungen wie <code>Image.png</code>, <code>image.PNG</code> oder <code>bild.png</code> werden nicht erkannt.</li>
-              <li>Die Ordnernamen müssen rein numerisch sein: <code>1</code>, <code>2</code>, <code>3</code>, …</li>
-              <li>Wenn mehr als 100 Nummern am Stück weder <code>image.png</code> noch <code>cover.json</code> liefern, endet der Scan vorher. Höhere Ordner werden dann nicht mehr angezeigt.</li>
-              <li>Die App muss über einen Webserver laufen, zum Beispiel VS Code Live Server oder GitHub Pages. Ein Doppelklick auf <code>index.html</code> reicht nicht.</li>
-              <li>Eine fehlerhafte <code>cover.json</code> führt nicht zum Viewer, sondern zum Editor.</li>
-              <li>Nach dem Herunterladen der <code>cover.json</code> muss diese manuell in den passenden Bildordner verschoben werden.</li>
-              <li>Browser- oder CDN-Caching kann alte Daten zeigen; dafür gibt es den Button <strong>Liste aktualisieren</strong>. Beim Scannen hängt die App deshalb unsichtbar einen Cache-Bypass-Parameter an die Prüf-Requests.</li>
-              <li>Leere Ordner ohne <code>image.png</code> und ohne <code>cover.json</code> sind für statisches Hosting unsichtbar und erscheinen daher nicht in der Liste.</li>
-              <li>Auf manchen Systemen ist die Schreibweise von Dateinamen case-sensitive.</li>
+              <li>Dateiname muss exakt <code>image.png</code> heißen.</li>
+              <li>Ordnernamen müssen rein numerisch sein.</li>
+              <li>Die App muss über einen Webserver laufen, z. B. Live Server oder GitHub Pages.</li>
+              <li>Eine ungültige <code>cover.json</code> öffnet den Editor statt des Viewers.</li>
+              <li>Wenn zwischen zwei vorhandenen Nummern mehr als zwei fehlende Nummern liegen, werden spätere Einträge nicht mehr gefunden.</li>
+              <li>Ändert sich die Rechteckanzahl in <code>cover.json</code>, wird der gespeicherte Sichtbarkeitszustand verworfen und alles wieder abgedeckt gestartet.</li>
             </ul>
           </div>
         </div>
@@ -183,8 +109,11 @@
 
   <template id="folderItemTemplate">
     <button class="folder-item" type="button">
-      <span class="folder-item-name"></span>
-      <span class="folder-item-meta"></span>
+      <span class="folder-item-top">
+        <span class="folder-item-name"></span>
+        <span class="folder-item-meta"></span>
+      </span>
+      <span class="folder-item-last"></span>
     </button>
   </template>
 

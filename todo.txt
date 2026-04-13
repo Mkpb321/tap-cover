@@ -1,2 +1,1 @@
-mach es viel platzsparender, alles unwichtige raus, alle info texte, ausser hinter dem i, dort alles wichtige reinschieben. 
-platzsparend und optimiert für smartphone
+beim setzen der vierecke kann man neu auch einen titel wählen, dieser ist dan auch im json und wird, falls vorhanden in der ordnerliste angezeigt
